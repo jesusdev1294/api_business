@@ -1,9 +1,10 @@
 const employeesData = require('../json/employess.json');
-
+// Ruta para obtener todos los empleados
 function getAllEmployees(req, res) {
     res.json(employeesData);
 }
 
+// Ruta para obtener empleados paginados
 function getEmployeesByPage(req, res) {
     const page = parseInt(req.query.page);
     const startIndex = (page - 1) * 2;
@@ -11,14 +12,14 @@ function getEmployeesByPage(req, res) {
     const paginatedEmployees = employeesData.slice(startIndex, endIndex + 1);
     res.json(paginatedEmployees);
 }
-
+// Ruta para obtener el empleado más viejo
 function getOldestEmployee(req, res) {
     const oldestEmployee = employeesData.reduce((oldest, employee) => {
         return employee.age > oldest.age ? employee : oldest;
     });
     res.json(oldestEmployee);
 }
-
+// Ruta para obtener empleados con privilegios de usuario
 function getUsers(req, res) {
     if (req.query.user === 'true') {
         const userEmployees = employeesData.filter(employee => employee.privileges === 'user');
@@ -27,7 +28,7 @@ function getUsers(req, res) {
         res.status(400).json({ code: 'bad_request' });
     }
 }
-
+// Ruta para agregar un nuevo empleado
 function addEmployee(req, res) {
     const newEmployee = req.body;
     if (isValidEmployee(newEmployee)) {
@@ -37,7 +38,7 @@ function addEmployee(req, res) {
         res.status(400).json({ code: 'bad_request' });
     }
 }
-
+// Ruta para obtener empleados con ciertos distintivos
 function getEmployeesByBadge(req, res) {
     const badge = req.query.badges;
     if (badge) {
@@ -47,7 +48,7 @@ function getEmployeesByBadge(req, res) {
         res.status(400).json({ code: 'bad_request' });
     }
 }
-
+// Ruta para obtener un empleado por nombre
 function getEmployeeByName(req, res) {
     const name = req.params.name;
     const employee = employeesData.find(employee => employee.name === name);
@@ -80,6 +81,7 @@ function isValidEmployee(employee) {
 }
     return true; 
 }
+
 module.exports = {
     getAllEmployees,
     getEmployeesByPage,
