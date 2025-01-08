@@ -1,4 +1,4 @@
-service: indicators
+service: lof
 frameworkVersion: '3.34.0'
 
 provider:
@@ -16,9 +16,9 @@ custom:
 
 functions:
   indicator:
-    handler: src/app.search
+    handler: src/app.lof
     events:
       - http:
-          path: search
+          path: lof
           method: get
 
