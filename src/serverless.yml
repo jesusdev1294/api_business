@@ -1,0 +1,24 @@
+service: indicators
+frameworkVersion: '3.34.0'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 3000 
+    noPrependStageInUrl: true 
+
+functions:
+  indicator:
+    handler: src/app.search
+    events:
+      - http:
+          path: search
+          method: get
+
