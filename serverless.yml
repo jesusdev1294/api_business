@@ -15,7 +15,7 @@ custom:
     noPrependStageInUrl: true 
 
 functions:
-  indicator:
+  lof:
     handler: src/app.lof
     events:
       - http:
