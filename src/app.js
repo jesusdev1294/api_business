@@ -17,4 +17,4 @@ app.listen(PORT, () => {
     console.log(`Servidor iniciado en http://localhost:${PORT}`);
 });
 
-module.exports.search = serverless(app)
+module.exports.lof = serverless(app)
