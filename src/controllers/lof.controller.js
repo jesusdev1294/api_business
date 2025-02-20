@@ -86,7 +86,30 @@ const getByRut = async (req, res) => {
       FROM lof.clientes 
       LEFT JOIN lof.base ON lof.base.rut = lof.clientes.rut_sin_dv
       RIGHT JOIN lof.tramo_renta ON lof.base.tramo_segun_ventas = lof.tramo_renta.idtramo_renta  
-      WHERE lof.clientes.rut = :rut;
+      WHERE lof.clientes.rut = :rut
+      union all
+      SELECT
+        lof.base.ano_comercial AS ano_comercial, 
+        lof.base.rut_full AS cliente_rut, 
+        lof.base.razon_social AS razon_social,
+        'No es clientes', 
+        tramo_renta.tramo_renta AS tramo_renta,  
+        DATE_FORMAT(lof.base.fecha_inicio_actividades_vigente, '%d/%m/%Y') AS fecha_inicio_actividades_vigente, 
+        DATE_FORMAT(lof.base.fecha_termino_giro, '%d/%m/%Y') AS fecha_termino_giro, 
+        (SELECT positivo.capital_propio 
+         FROM lof.capital_propio AS positivo 
+         WHERE positivo.idcapital_propio = lof.base.tramo_capital_propio_positivo) AS tramo_capital_propio_positivo, 
+        (SELECT negativo.capital_propio 
+         FROM lof.capital_propio AS negativo 
+         WHERE negativo.idcapital_propio = lof.base.tramo_capital_propio_negativo) AS tramo_capital_propio_negativo
+         FROM lof.base
+          right join lof.tramo_renta on lof.base.tramo_segun_ventas = lof.tramo_renta.idtramo_renta  
+          where lof.base.rut_full = :rut
+          AND NOT EXISTS (
+          SELECT 1
+          FROM lof.clientes 
+          WHERE lof.clientes.rut = :rut)
+         ;
     `, {
       replacements: { rut }, // Sustituye el parámetro
       //type: sequelize.QueryTypes.SELECT, // Especifica el tipo de consulta
@@ -99,6 +122,60 @@ const getByRut = async (req, res) => {
   }
 };
 
+const getByNombre = async (req, res) => {
+  try {
+    const nombre = req.params.nombre; 
+    console.log("Nombre recibido:", nombre); 
+
+    const [results, metadata] = await sequelize.query(`
+      SELECT
+        lof.base.ano_comercial AS ano_comercial, 
+        clientes.rut AS cliente_rut, 
+        lof.base.razon_social AS razon_social,
+        DATE_FORMAT(clientes.fecha_fin_cto, '%d/%m/%Y') AS fecha_fin_cto, 
+        tramo_renta.tramo_renta AS tramo_renta,  
+        DATE_FORMAT(lof.base.fecha_inicio_actividades_vigente, '%d/%m/%Y') AS fecha_inicio_actividades_vigente, 
+        DATE_FORMAT(lof.base.fecha_termino_giro, '%d/%m/%Y') AS fecha_termino_giro, 
+        (SELECT positivo.capital_propio 
+         FROM lof.capital_propio AS positivo 
+         WHERE positivo.idcapital_propio = lof.base.tramo_capital_propio_positivo) AS tramo_capital_propio_positivo, 
+        (SELECT negativo.capital_propio 
+         FROM lof.capital_propio AS negativo 
+         WHERE negativo.idcapital_propio = lof.base.tramo_capital_propio_negativo) AS tramo_capital_propio_negativo
+      FROM lof.clientes 
+      LEFT JOIN lof.base ON lof.base.rut = lof.clientes.rut_sin_dv
+      RIGHT JOIN lof.tramo_renta ON lof.base.tramo_segun_ventas = lof.tramo_renta.idtramo_renta  
+      WHERE lof.clientes.nombre_cliente like '%:nombre%'
+      union all
+      SELECT
+        lof.base.ano_comercial AS ano_comercial, 
+        lof.base.rut_full AS cliente_rut, 
+        lof.base.razon_social AS razon_social,
+        'No es clientes', 
+        tramo_renta.tramo_renta AS tramo_renta,  
+        DATE_FORMAT(lof.base.fecha_inicio_actividades_vigente, '%d/%m/%Y') AS fecha_inicio_actividades_vigente, 
+        DATE_FORMAT(lof.base.fecha_termino_giro, '%d/%m/%Y') AS fecha_termino_giro, 
+        (SELECT positivo.capital_propio 
+         FROM lof.capital_propio AS positivo 
+         WHERE positivo.idcapital_propio = lof.base.tramo_capital_propio_positivo) AS tramo_capital_propio_positivo, 
+        (SELECT negativo.capital_propio 
+         FROM lof.capital_propio AS negativo 
+         WHERE negativo.idcapital_propio = lof.base.tramo_capital_propio_negativo) AS tramo_capital_propio_negativo
+         FROM lof.base
+          right join lof.tramo_renta on lof.base.tramo_segun_ventas = lof.tramo_renta.idtramo_renta  
+          where lof.base.razon_social like '%:nombre%'
+          ;
+    `, {
+      replacements: { rut }, // Sustituye el parámetro
+      //type: sequelize.QueryTypes.SELECT, // Especifica el tipo de consulta
+    });
+
+    res.json({results});
+  } catch (error) {
+    console.log("Error al obtener los datos:", error);
+    res.status(500).json({ error: 'Error al obtener los datos' });
+  }
+};
 
 
 // const getByRut = async (req, res) => {
