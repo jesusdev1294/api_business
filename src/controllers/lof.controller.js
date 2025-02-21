@@ -145,7 +145,7 @@ const getByNombre = async (nombre, res) => {
       FROM lof.clientes 
       LEFT JOIN lof.base ON lof.base.rut = lof.clientes.rut_sin_dv
       RIGHT JOIN lof.tramo_renta ON lof.base.tramo_segun_ventas = lof.tramo_renta.idtramo_renta  
-      WHERE lof.clientes.nombre_cliente like ':nombre'
+      WHERE lof.clientes.nombre_cliente like :nombre
       union all
       SELECT
         lof.base.ano_comercial AS ano_comercial, 
@@ -163,7 +163,7 @@ const getByNombre = async (nombre, res) => {
          WHERE negativo.idcapital_propio = lof.base.tramo_capital_propio_negativo) AS tramo_capital_propio_negativo
          FROM lof.base
           right join lof.tramo_renta on lof.base.tramo_segun_ventas = lof.tramo_renta.idtramo_renta  
-          where lof.base.razon_social like ':nombre'
+          where lof.base.razon_social like :nombre
           ;
     `, {
       replacements: { nombre: `%${nombre}%` }, // Sustituye el parámetro
