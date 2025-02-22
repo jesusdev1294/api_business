@@ -23,9 +23,6 @@ const getAllTramoVentas = async (req, res) => {
 };
 
 
-
-
-// const getByRut = async (req, res) => {
 //   const rut = req.params.rut; // Obtén el RUT desde los parámetros de la URL
 //   try {
 //     const [results, metadata] = await sequelize.query(`
@@ -145,7 +142,7 @@ const getByNombre = async (nombre, res) => {
       FROM lof.clientes 
       LEFT JOIN lof.base ON lof.base.rut = lof.clientes.rut_sin_dv
       RIGHT JOIN lof.tramo_renta ON lof.base.tramo_segun_ventas = lof.tramo_renta.idtramo_renta  
-      WHERE lof.clientes.nombre_cliente like ':nombre'
+      WHERE lof.clientes.nombre_cliente like :nombre
       union all
       SELECT
         lof.base.ano_comercial AS ano_comercial, 
@@ -163,7 +160,7 @@ const getByNombre = async (nombre, res) => {
          WHERE negativo.idcapital_propio = lof.base.tramo_capital_propio_negativo) AS tramo_capital_propio_negativo
          FROM lof.base
           right join lof.tramo_renta on lof.base.tramo_segun_ventas = lof.tramo_renta.idtramo_renta  
-          where lof.base.razon_social like ':nombre'
+          where lof.base.razon_social like :nombre
           ;
     `, {
       replacements: { nombre: `%${nombre}%` }, // Sustituye el parámetro
@@ -204,76 +201,108 @@ const getByNombre = async (nombre, res) => {
 //   }
 // };
 
-const geyByNameOrRut =  async (req,res)  => {
-  console.log('questttt',req.params.word)
- const valid =  validarRut2(req.params.word);
- console.log('-kdkdkd valllliddddddd',valid)
-    if(valid){
-      console.log('----->');
-        try{
-          const data = await getByRut(req.params.word, res);
-          console.log('----->',data);
-        }catch(error) {
-          console.log('error');
-          return res.status(500).json({ error: 'Error al obtener los datos' });
-      } 
-    } else {
-      console.log('----->noofkfkfjk');
-        await getByNombre(req.params.word, res);
-      // return res.status(500).json({ error: 'Error al obtener los datos' });
+// const getByNameOrRut =  async (req,res)  => {
+//   console.log('questttt',req.params.word)
+//  const valid =  validarRut2(req.params.word);
+//  console.log('-kdkdkd valllliddddddd',valid)
+//     if(valid){
+//       console.log('----->');
+//         try{
+//           const data = await getByRut(req.params.word, res);
+//           console.log('----->',data);
+//         }catch(error) {
+//           console.log('error');
+//           return res.status(500).json({ error: 'Error al obtener los datos' });
+//       } 
+//     } else {
+//       console.log('----->noofkfkfjk');
+//         await getByNombre(req.params.word, res);
+//       // return res.status(500).json({ error: 'Error al obtener los datos' });
+//     }
+
+
+// } 
+
+// const getByNameOrRut = async (req, res) => {
+//   const { word } = req.params;
+  
+//   // 1. Primero validar RUT
+//   if (validarRut2(word)) {
+//     try {
+//       const data = await getByRut(word); // Asume que retorna datos
+//       return res.json(data);
+//     } catch (error) {
+//       return res.status(500).json({ error: 'Error buscando por RUT' });
+//     }
+//   }
+  
+//   // 2. Si no es RUT válido, validar nombre
+//   else if (validarNombre(word)) {
+//     try {
+//       const data = await getByNombre(word); // Asume que retorna datos
+//       return res.json(data);
+//     } catch (error) {
+//       return res.status(500).json({ error: 'Error buscando por nombre' });
+//     }
+//   }
+
+//   // 3. Si ambos son inválidos
+//   return res.status(400).json({ error: 'No es un RUT ni nombre válido' });
+// };
+
+
+
+const getByNameOrRut = async (req, res) => {
+
+  const word = req.params.word;
+  const isValidRut = validarRut(word);
+
+  if (isValidRut) {
+    try {
+      const data = await getByRut(word, res);
+    } catch (error) {
+      console.error('Error en getByRut:', error);
+      return res.status(500).json({ error: 'Error al obtener los datos' });
     }
+  } else if (esNombreValido(word)) {
+    // Nueva validación: si es un nombre válido, busca por nombre
+    console.log('Buscando por nombre...');
+    await getByNombre(word, res);
+  } else {
+    // Tercera opción: si no es RUT ni nombre válido, retorna un error 400
+    console.log('Entrada inválida: ni RUT ni nombre válido');
+    return res.status(400).json({ error: 'Entrada inválida. Debe ser un RUT válido o un nombre.' });
+  }
+};
 
-
-} 
-
-function validarRut2(rut) {
-  // Elimina puntos, guiones y convierte a minúsculas
-  console.log("--------->ruuuuuut",rut)
+// Función para validar un RUT chileno
+function validarRut(rut) {
+  console.log("--------->ruuuuuut", rut);
   const rutLimpio = rut.replace(/\./g, '').replace(/-/g, '').toLowerCase();
 
-  // Debe tener al menos 2 caracteres (cuerpo + dígito verificador)
-  if (rutLimpio.length < 2) {
-    return false;
-  }
+  if (rutLimpio.length < 2) return false;
 
-  // Separa el cuerpo del RUT y el dígito verificador
   const cuerpo = rutLimpio.slice(0, -1);
   const dv = rutLimpio.slice(-1);
 
-  // Verifica que el cuerpo sea numérico
-  if (!/^\d+$/.test(cuerpo)) {
-    return false;
-  }
+  if (!/^\d+$/.test(cuerpo)) return false;
 
-  let suma = 0;
-  let multiplo = 2;
-
-  // Recorre el cuerpo del RUT de derecha a izquierda
+  let suma = 0, multiplo = 2;
   for (let i = cuerpo.length - 1; i >= 0; i--) {
     suma += parseInt(cuerpo.charAt(i)) * multiplo;
     multiplo = multiplo < 7 ? multiplo + 1 : 2;
   }
 
-  // Calcula el dígito verificador esperado
   let dvCalculado = 11 - (suma % 11);
-  if (dvCalculado === 11) {
-    dvCalculado = '0';
-  } else if (dvCalculado === 10) {
-    dvCalculado = 'k';
-  } else {
-    dvCalculado = String(dvCalculado);
-  }
+  dvCalculado = dvCalculado === 11 ? '0' : dvCalculado === 10 ? 'k' : String(dvCalculado);
 
-  // Compara el dígito verificador calculado con el ingresado
   return dvCalculado === dv;
 }
 
-// // Ejemplo de uso sin puntos:
-// const rut1 = "123456785";   // RUT con dígito verificador '5'
-// const rut2 = "12345678-k";   // RUT con dígito verificador 'k'
-
-// console.log(validarRut(rut1)); // true o false según el dígito verificador
-// console.log(validarRut(rut2)); // true o false según el dígito verificador
+// Nueva función para validar si es un nombre válido (solo letras y espacios)
+function esNombreValido(nombre) {
+  return /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre);
+}
 
 
 
@@ -282,4 +311,5 @@ function validarRut2(rut) {
 
 
 
-module.exports = { getByRut , getAllTramoVentas, geyByNameOrRut};
+
+module.exports = { getByRut , getAllTramoVentas, getByNameOrRut};

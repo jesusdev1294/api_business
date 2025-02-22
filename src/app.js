@@ -13,7 +13,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.get('/api/search', searchController.search);
-app.get('/lof/:word', lofController.geyByNameOrRut);
+app.get('/lof/:word', lofController.getByNameOrRut);
 
 
 app.listen(PORT, () => {
