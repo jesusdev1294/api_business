@@ -7,10 +7,7 @@ const { CapitalPropio } = require('../db/models/capitalPropio');
 const { setupAssociations } = require('../db/models/association');
 const sequelize = require('../db/conecction');
 
-
 setupAssociations();
-
-
 
 const getAllTramoVentas = async (req, res) => {
   try {
@@ -21,44 +18,6 @@ const getAllTramoVentas = async (req, res) => {
     res.status(500).send('Error al obtener los tramos de venta');
   }
 };
-
-
-//   const rut = req.params.rut; // Obtén el RUT desde los parámetros de la URL
-//   try {
-//     const [results, metadata] = await sequelize.query(`
-//       SELECT
-//         lof.base.ano_comercial AS ano_comercial, 
-//         clientes.rut AS cliente_rut, 
-//         lof.base.razon_social AS razon_social,
-//         DATE_FORMAT(clientes.fecha_fin_cto, '%d/%m/%Y') AS fecha_fin_cto, 
-//         tramo_renta.tramo_renta AS tramo_renta,  
-//         DATE_FORMAT(lof.base.fecha_inicio_actividades_vigente, '%d/%m/%Y') AS fecha_inicio_actividades_vigente, 
-//         DATE_FORMAT(lof.base.fecha_termino_giro, '%d/%m/%Y') AS fecha_termino_giro, 
-//         (SELECT positivo.capital_propio 
-//          FROM lof.capital_propio AS positivo 
-//          WHERE positivo.idcapital_propio = lof.base.tramo_capital_propio_positivo) AS tramo_capital_propio_positivo, 
-//         (SELECT negativo.capital_propio 
-//          FROM lof.capital_propio AS negativo 
-//          WHERE negativo.idcapital_propio = lof.base.tramo_capital_propio_negativo) AS tramo_capital_propio_negativo
-//       FROM lof.clientes 
-//       LEFT JOIN lof.base ON lof.base.rut = lof.clientes.rut_sin_dv
-//       RIGHT JOIN lof.tramo_renta ON lof.base.tramo_segun_ventas = lof.tramo_renta.idtramo_renta  
-//       WHERE lof.clientes.rut = :rut;
-//     `, {
-//       replacements: { rut }, // Sustituye el parámetro
-//       type: sequelize.QueryTypes.SELECT, // Especifica el tipo de consulta
-//     });
-//     console.log("...z",results)
-//     // Responde con los datos
-//     return res.json(results);
-//   } catch (error) {
-//     console.error('Error al obtener los datos:', error);
-//     return res.status(500).json({
-//       message: 'Error interno del servidor',
-//       error: error.message,
-//     });
-//   }
-// };
 
 const getByRut = async (rut, res) => {
   try {
@@ -174,84 +133,6 @@ const getByNombre = async (nombre, res) => {
   }
 };
 
-
-// const getByRut = async (req, res) => {
-//   try {
-//     const { rut } = req.params; // Capturar el RUT desde los parámetros de la URL
-
-//     // Llamar al procedimiento almacenado
-//     await sequelize.query(`CALL cliente_json(:rut, @resultado)`, {
-//       replacements: { rut }, // Pasar el RUT como parámetro
-//     });
-
-//     // Recuperar el valor del resultado de la variable de salida
-//     const [[output]] = await sequelize.query('SELECT @resultado AS resultado');
-
-//     return res.json({
-//       success: true,
-//       data: output ? output.resultado : null,
-//     });
-//   } catch (error) {
-//     console.error('Error al ejecutar el procedimiento almacenado:', error);
-//     return res.status(500).json({
-//       success: false,
-//       message: 'Error interno del servidor',
-//       error: error.message,
-//     });
-//   }
-// };
-
-// const getByNameOrRut =  async (req,res)  => {
-//   console.log('questttt',req.params.word)
-//  const valid =  validarRut2(req.params.word);
-//  console.log('-kdkdkd valllliddddddd',valid)
-//     if(valid){
-//       console.log('----->');
-//         try{
-//           const data = await getByRut(req.params.word, res);
-//           console.log('----->',data);
-//         }catch(error) {
-//           console.log('error');
-//           return res.status(500).json({ error: 'Error al obtener los datos' });
-//       } 
-//     } else {
-//       console.log('----->noofkfkfjk');
-//         await getByNombre(req.params.word, res);
-//       // return res.status(500).json({ error: 'Error al obtener los datos' });
-//     }
-
-
-// } 
-
-// const getByNameOrRut = async (req, res) => {
-//   const { word } = req.params;
-  
-//   // 1. Primero validar RUT
-//   if (validarRut2(word)) {
-//     try {
-//       const data = await getByRut(word); // Asume que retorna datos
-//       return res.json(data);
-//     } catch (error) {
-//       return res.status(500).json({ error: 'Error buscando por RUT' });
-//     }
-//   }
-  
-//   // 2. Si no es RUT válido, validar nombre
-//   else if (validarNombre(word)) {
-//     try {
-//       const data = await getByNombre(word); // Asume que retorna datos
-//       return res.json(data);
-//     } catch (error) {
-//       return res.status(500).json({ error: 'Error buscando por nombre' });
-//     }
-//   }
-
-//   // 3. Si ambos son inválidos
-//   return res.status(400).json({ error: 'No es un RUT ni nombre válido' });
-// };
-
-
-
 const getByNameOrRut = async (req, res) => {
 
   const word = req.params.word;
@@ -303,13 +184,5 @@ function validarRut(rut) {
 function esNombreValido(nombre) {
   return /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre);
 }
-
-
-
-
-
-
-
-
 
 module.exports = { getByRut , getAllTramoVentas, getByNameOrRut};
