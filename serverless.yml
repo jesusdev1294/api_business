@@ -19,6 +19,6 @@ functions:
     handler: src/app.lof
     events:
       - http:
-          path: lof/{rut}
+          path: lof/{word}
           method: get
 
